@@ -4,9 +4,7 @@
   "description": "Generates skeleton for a Minecraft mod that uses Fabric loader",
   "homepage": "https://github.com/ExtraCrafTX/generator-fabric-mod",
   "author": {
-    "name": "Kaamil Jasani",
-    "email": "",
-    "url": ""
+    "name": "Kaamil Jasani"
   },
   "files": [
     "generators"
