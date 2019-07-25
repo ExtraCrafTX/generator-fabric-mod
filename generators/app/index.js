@@ -3,6 +3,15 @@ const Generator = require('yeoman-generator');
 const chalk = require('chalk');
 const yosay = require('yosay');
 
+function isValidURL(url) {
+  try {
+    new URL(url);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 module.exports = class extends Generator {
   prompting() {
     // Have Yeoman greet the user.
@@ -53,6 +62,47 @@ module.exports = class extends Generator {
             return chalk.redBright("Please format your version according to SemVer");
           }
           return true;
+        }
+      },
+      {
+        type: 'input',
+        name: 'author',
+        message: 'Author:',
+        validate: async (input, hash) => {
+          if (!input.replace(/\s/g, ""))
+            return chalk.redBright("Author may not be blank");
+          return true;
+        },
+        store: true
+      },
+      {
+        type: 'input',
+        name: 'homepage',
+        message: 'Mod homepage:',
+        validate: async (input, hash) => {
+          if (!input) {
+            return true;
+          } else {
+            if (isValidURL(input))
+              return true;
+            else
+              return chalk.redBright("Please enter a valid URL or leave it blank");
+          }
+        }
+      },
+      {
+        type: 'input',
+        name: 'sources',
+        message: 'Source code URL:',
+        validate: async (input, hash) => {
+          if (!input) {
+            return true;
+          } else {
+            if (isValidURL(input))
+              return true;
+            else
+              return chalk.redBright("Please enter a valid URL or leave it blank");
+          }
         }
       }
     ];
