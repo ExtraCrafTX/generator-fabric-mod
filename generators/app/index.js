@@ -2,6 +2,7 @@
 const Generator = require('yeoman-generator');
 const chalk = require('chalk');
 const yosay = require('yosay');
+const request = require('request');
 
 const LICENSES = [
   { name: 'Apache 2.0', value: 'Apache-2.0' },
@@ -17,6 +18,9 @@ const LICENSES = [
   { name: 'No License (Copyrighted)', value: 'All-Rights-Reserved' }
 ];
 
+let mcVersions = [];
+let defaultMcVersion = 0;
+
 function isValidURL(url) {
   try {
     new URL(url);
@@ -26,7 +30,38 @@ function isValidURL(url) {
   }
 }
 
+function getJSON(url){
+  return new Promise((resolve, reject)=>{
+    request.get(
+      {url, json: true},
+      (err, res, data)=>{
+        if(err){
+          reject(err);
+        }else if(res.statusCode != 200){
+          reject(res.statusCode);
+        }else{
+          resolve(data);
+        }
+      }
+    )
+  });
+}
+
 module.exports = class extends Generator {
+  async initializing(){
+    //MC versions
+    let data = await getJSON('https://meta.fabricmc.net/v2/versions/game');
+    data.forEach((version) => {
+      mcVersions.push(version.version);
+    });
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].stable) {
+        defaultMcVersion = i;
+        break;
+      }
+    }
+  }
+
   prompting() {
     // Have Yeoman greet the user.
     this.log(
@@ -34,6 +69,13 @@ module.exports = class extends Generator {
     );
 
     const prompts = [
+      {
+        type: 'list',
+        name: 'minecraft_version',
+        message: 'Minecraft version:',
+        choices: mcVersions,
+        default: defaultMcVersion
+      },
       {
         type: 'input',
         name: 'mod_name',
