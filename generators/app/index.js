@@ -125,6 +125,18 @@ module.exports = class extends Generator {
         message: 'Select a license:',
         choices: LICENSES,
         default: 1
+      },
+      {
+        type: 'input',
+        name: 'license_author',
+        message: 'Name on license:',
+        default: async hash => hash.author,
+        validate: async (input, hash) => {
+          if (!input.replace(/\s/g, ""))
+            return chalk.redBright("Name may not be blank");
+          return true;
+        },
+        when: async hash => hash.license !== 'unlicense'
       }
     ];
 
