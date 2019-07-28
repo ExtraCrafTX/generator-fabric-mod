@@ -438,5 +438,10 @@ module.exports = class extends Generator {
         author: this.props.license_author
       }
     );
+    this.fs.copyTpl(
+      this.templatePath('gradle.properties'),
+      this.destinationPath('gradle.properties'),
+      this.props
+    );
   }
 };
