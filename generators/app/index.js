@@ -24,6 +24,8 @@ const LICENSES = [
 let mcVersions = [];
 let defaultMcVersion = 0;
 
+let fabricAPIVersions = [];
+
 function isValidURL(url) {
   try {
     new URL(url);
@@ -31,6 +33,10 @@ function isValidURL(url) {
   } catch (_) {
     return false;
   }
+}
+
+function doubleTrim(str, amount) {
+  return str.substring(amount, str.length - amount);
 }
 
 function getJSON(url){
@@ -52,8 +58,9 @@ function getJSON(url){
 
 module.exports = class extends Generator {
   async initializing(){
+    let data;
     //MC versions
-    let data = await getJSON('https://meta.fabricmc.net/v2/versions/game');
+    data = await getJSON('https://meta.fabricmc.net/v2/versions/game');
     data.forEach((version) => {
       mcVersions.push(version.version);
     });
@@ -63,6 +70,37 @@ module.exports = class extends Generator {
         break;
       }
     }
+    //Fabric API versions
+    data = await getJSON('https://addons-ecs.forgesvc.net/api/v2/addon/306612/files');
+    let versionRegex = /\[.+\]/;
+    data.forEach((version) => {
+      if (version.displayName.startsWith('[')) {
+        version.mcVersion = doubleTrim(version.displayName.match(versionRegex)[0], 1);
+        let val = 0;
+        let found = false;
+        for (let i = 0; i < mcVersions.length; i++) {
+          if (version.mcVersion == mcVersions[i]) {
+            val = i;
+            found = true;
+          }
+        }
+        if (!found)
+          val += data.length;
+        version.mcVersionIndex = val;
+        fabricAPIVersions.push({ name: version.displayName, value: version });
+      }
+    });
+    fabricAPIVersions.sort((a, b) => {
+      let verA = a.value.mcVersionIndex;
+      let verB = b.value.mcVersionIndex;
+      if (verA == verB) {
+        let buildRegex = /build \d+/;
+        let buildA = a.name.match(buildRegex)[0].substring(6);
+        let buildB = b.name.match(buildRegex)[0].substring(6);
+        return buildB - buildA;
+      }
+      return verA - verB;
+    });
   }
 
   prompting() {
@@ -230,6 +268,33 @@ module.exports = class extends Generator {
         name: 'use_api',
         message: 'Use Fabric API?',
         default: true
+      },
+      {
+        type: 'list',
+        name: 'fabric_api_version',
+        message: 'Fabric API version (check curseforge for compatibilty):',
+        choices: fabricAPIVersions,
+        default: async (hash) => {
+          let versionIndex = 0;
+          for (let i = 0; i < mcVersions.length; i++) {
+            if (hash.minecraft_version == mcVersions[i]) {
+              versionIndex = i;
+              break;
+            }
+          }
+          for (let i = 0; i < fabricAPIVersions.length; i++) {
+            if (fabricAPIVersions[i].value.mcVersionIndex >= versionIndex)
+              return i;
+          }
+          return 0;
+        },
+        when: async (hash) => hash.use_api,
+        filter: async (input) => {
+          let name = input.displayName;
+          let buildNum = name.match(/build \d+/)[0].substring(6);
+          let version = name.match(/API \d+\.\d+\.\d+/)[0].substring(4);
+          return version + "+" + "build." + buildNum;
+        }
       }
     ];
 
