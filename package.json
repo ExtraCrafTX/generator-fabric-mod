@@ -74,6 +74,6 @@
     "pretest": "eslint .",
     "test": "jest"
   },
-  "repository": "ExtraCrafTX/generator-fabric-mod",
+  "repository": "https://github.com/ExtraCrafTX/generator-fabric-mod",
   "license": "MIT"
 }
