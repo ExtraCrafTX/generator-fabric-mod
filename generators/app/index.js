@@ -463,5 +463,54 @@ module.exports = class extends Generator {
         this.props
       );
     }
+    let fabricMod = {
+      schemaVersion: 1,
+      id: this.props.mod_id,
+      version: '${version}',
+      name: this.props.mod_name,
+      description: this.props.mod_description,
+      authors: [this.props.author],
+      contact: {},
+      license: this.props.license,
+      icon: 'assets/' + this.props.mod_id + '/icon.png',
+      environment: '*',
+      entrypoints: {
+        main: [this.props.mod_package + '.' + this.props.main_class]
+      },
+      depends: {
+        fabricloader: '>=0.4.0'
+      }
+    };
+    if (this.props.homepage) {
+      fabricMod.contact.homepage = this.props.homepage;
+    }
+    if (this.props.sources) {
+      fabricMod.contact.souces = this.props.sources;
+    }
+    if (this.props.use_api) {
+      fabricMod.depends.fabric = '*';
+    }
+    if (this.props.use_mixins) {
+      fabricMod.mixins = [this.props.mod_id + '.mixins.json'];
+      let mixins = {
+        required: true,
+        package: this.props.mod_package + '.mixin',
+        compatibilityLevel: 'JAVA_8',
+        mixins: [],
+        client: [],
+        server: [],
+        injectors: {
+          defaultRequire: 1
+        }
+      };
+      this.fs.writeJSON(
+        this.destinationPath('src/main/resources/' + this.props.mod_id + '.mixins.json'),
+        mixins
+      );
+    }
+    this.fs.writeJSON(
+      this.destinationPath('src/main/resources/fabric.mod.json'),
+      fabricMod
+    );
   }
 };
