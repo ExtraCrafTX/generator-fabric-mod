@@ -3,10 +3,12 @@ const Generator = require('yeoman-generator');
 const chalk = require('chalk');
 const yosay = require('yosay');
 const request = require('request');
+const xml2js = require('xml2js');
 
 const KEYWORDS = ["abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "default", "do", "double", "else", "enum", "extends", "false", "final", "finally", "float", "for", "goto", "if", "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "strictfp", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "void", "volatile", "while", "continue"];
 const PACKAGE_REGEX = /^([A-Za-z$_][A-Za-z0-9$_]*\.)*[A-Za-z$_][A-Za-z0-9$_]*$/;
 const IDENT_REGEX = /^[A-Za-z$_][A-Za-z0-9$_]*$/;
+const LOOM_RECOMMENDED = '0.2.4-SNAPSHOT';
 const LICENSES = [
   { name: 'Apache 2.0', value: 'Apache-2.0' },
   { name: 'MIT', value: 'MIT' },
@@ -27,6 +29,8 @@ let defaultMcVersion = 0;
 let fabricAPIVersions = [];
 
 let yarnMappings = [];
+
+let loomVersions = [];
 
 function isValidURL(url) {
   try {
@@ -55,6 +59,29 @@ function getJSON(url){
         }
       }
     )
+  });
+}
+
+function getXML(url) {
+  return new Promise((resolve, reject)=>{
+    request.get(
+      { url },
+      (err, res, data) => {
+        if (err) {
+          reject(err);
+        } else if (res.statusCode != 200) {
+          reject(res.statusCode);
+        } else {
+          xml2js.parseString(data, (err, res) => {
+            if(err){
+              reject(err);
+            }else{
+              resolve(res);
+            }
+          });
+        }
+      }
+    );
   });
 }
 
@@ -107,6 +134,11 @@ module.exports = class extends Generator {
     data = await getJSON('https://meta.fabricmc.net/v2/versions/yarn');
     data.forEach((mapping) => {
       yarnMappings.push({ name: mapping.version, value: mapping });
+    });
+    //Loom versions
+    data = await getXML('https://maven.fabricmc.net/net/fabricmc/fabric-loom/maven-metadata.xml');
+    data.metadata.versioning[0].versions[0].version.forEach((version) => {
+      loomVersions.push(version);
     });
   }
 
@@ -313,6 +345,18 @@ module.exports = class extends Generator {
           });
         },
         filter: async (input) => input.version
+      },
+      {
+        type: 'list',
+        name: 'loom_version',
+        message: 'Loom version:',
+        choices: loomVersions,
+        default: async (hash) => {
+          for (let i = 0; i < loomVersions.length; i++) {
+            if (loomVersions[i] == LOOM_RECOMMENDED)
+              return i;
+          }
+        },
       }
     ];
 
