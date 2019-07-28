@@ -192,11 +192,11 @@ module.exports = class extends Generator {
             let idents = input.split(".");
             for (let i = 0; i < idents.length; i++) {
               if (KEYWORDS.includes(idents[i])) {
-                return idents[i] + " is a reserved keyword";
+                return chalk.redBright(idents[i] + " is a reserved keyword");
               }
             }
           } else {
-            return "Please enter a valid java package name";
+            return chalk.redBright("Please enter a valid java package name");
           }
           return true;
         }
@@ -211,13 +211,25 @@ module.exports = class extends Generator {
         validate: async (input, hash) => {
           if (IDENT_REGEX.test(input)) {
             if (KEYWORDS.includes(input)) {
-              return input + " is a reserved keyword";
+              return chalk.redBright(input + " is a reserved keyword");
             }
           } else {
-            return "Please enter a valid class name";
+            return chalk.redBright("Please enter a valid class name");
           }
           return true;
         }
+      },
+      {
+        type: 'confirm',
+        name: 'use_mixins',
+        message: 'Use mixins?',
+        default: true
+      },
+      {
+        type: 'confirm',
+        name: 'use_api',
+        message: 'Use Fabric API?',
+        default: true
       }
     ];
 
