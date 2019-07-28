@@ -512,5 +512,11 @@ module.exports = class extends Generator {
       this.destinationPath('src/main/resources/fabric.mod.json'),
       fabricMod
     );
+    let codePath = 'src/main/java/' + this.props.mod_package.replace(/\./g, '/');
+    this.fs.copyTpl(
+      this.templatePath('initialiser.java.ejs'),
+      this.destinationPath(codePath + '/' + this.props.main_class + '.java'),
+      this.props
+    );
   }
 };
