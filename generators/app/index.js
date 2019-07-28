@@ -4,6 +4,9 @@ const chalk = require('chalk');
 const yosay = require('yosay');
 const request = require('request');
 
+const KEYWORDS = ["abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "default", "do", "double", "else", "enum", "extends", "false", "final", "finally", "float", "for", "goto", "if", "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "strictfp", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "void", "volatile", "while", "continue"];
+const PACKAGE_REGEX = /^([A-Za-z$_][A-Za-z0-9$_]*\.)*[A-Za-z$_][A-Za-z0-9$_]*$/;
+const IDENT_REGEX = /^[A-Za-z$_][A-Za-z0-9$_]*$/;
 const LICENSES = [
   { name: 'Apache 2.0', value: 'Apache-2.0' },
   { name: 'MIT', value: 'MIT' },
@@ -179,6 +182,42 @@ module.exports = class extends Generator {
           return true;
         },
         when: async hash => hash.license !== 'unlicense'
+      },
+      {
+        type: 'input',
+        name: 'mod_package',
+        message: 'Main package:',
+        validate: async (input, hash) => {
+          if (PACKAGE_REGEX.test(input)) {
+            let idents = input.split(".");
+            for (let i = 0; i < idents.length; i++) {
+              if (KEYWORDS.includes(idents[i])) {
+                return idents[i] + " is a reserved keyword";
+              }
+            }
+          } else {
+            return "Please enter a valid java package name";
+          }
+          return true;
+        }
+      },
+      {
+        type: 'input',
+        name: 'main_class',
+        message: 'Mod initialiser class:',
+        default: async (hash) => {
+          return hash.mod_name.replace(/[\s\-]/g, "");
+        },
+        validate: async (input, hash) => {
+          if (IDENT_REGEX.test(input)) {
+            if (KEYWORDS.includes(input)) {
+              return input + " is a reserved keyword";
+            }
+          } else {
+            return "Please enter a valid class name";
+          }
+          return true;
+        }
       }
     ];
 
