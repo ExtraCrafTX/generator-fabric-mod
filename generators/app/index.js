@@ -430,5 +430,13 @@ module.exports = class extends Generator {
       this.templatePath('settings.gradle'),
       this.destinationPath('settings.gradle')
     );
+    this.fs.copyTpl(
+      this.templatePath('licenses/' + this.props.license + '.txt'),
+      this.destinationPath('LICENSE'),
+      {
+        year: new Date().getFullYear(),
+        author: this.props.license_author
+      }
+    );
   }
 };
