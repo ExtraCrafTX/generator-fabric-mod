@@ -1,6 +1,6 @@
 {
   "name": "generator-fabric-mod",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generates skeleton for a Minecraft mod that uses Fabric loader",
   "homepage": "https://github.com/ExtraCrafTX/generator-fabric-mod",
   "author": {
