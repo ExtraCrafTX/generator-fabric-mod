@@ -443,5 +443,25 @@ module.exports = class extends Generator {
       this.destinationPath('gradle.properties'),
       this.props
     );
+    let loomIndex = 0;
+    for (let i = 0; i < loomVersions.length; i++) {
+      if (this.props.loom_version == loomVersions[i]) {
+        loomIndex = i;
+        break;
+      }
+    }
+    if (loomIndex > 8) {
+      this.fs.copyTpl(
+        this.templatePath('4+build.gradle'),
+        this.destinationPath('build.gradle'),
+        this.props
+      );
+    } else {
+      this.fs.copyTpl(
+        this.templatePath('build.gradle'),
+        this.destinationPath('build.gradle'),
+        this.props
+      );
+    }
   }
 };
