@@ -519,4 +519,11 @@ module.exports = class extends Generator {
       this.props
     );
   }
+  
+  end(){
+    this.log('');
+    this.log(`${chalk.green.bold('Done')} creating project.`);
+    this.log(`You can run ${chalk.bold('./gradlew genSources')} to generate sources`);
+    this.log(`You should also run the gradle setup command for the IDE you will be using. See ${chalk.underline('https://fabricmc.net/wiki/tutorial:setup')}`);
+  }
 };
