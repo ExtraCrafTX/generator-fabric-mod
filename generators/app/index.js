@@ -32,6 +32,8 @@ let yarnMappings = [];
 
 let loomVersions = [];
 
+let loaderVersions = [];
+
 function isValidURL(url) {
   try {
     new URL(url);
@@ -139,6 +141,11 @@ module.exports = class extends Generator {
     data = await getXML('https://maven.fabricmc.net/net/fabricmc/fabric-loom/maven-metadata.xml');
     data.metadata.versioning[0].versions[0].version.forEach((version) => {
       loomVersions.push(version);
+    });
+    //Loader versions
+    data = await getJSON('https://meta.fabricmc.net/v2/versions/loader');
+    data.forEach((loader) => {
+      loaderVersions.push({ name: loader.version, value: loader });
     });
   }
 
@@ -357,6 +364,13 @@ module.exports = class extends Generator {
               return i;
           }
         },
+      },
+      {
+        type: 'list',
+        name: 'loader_version',
+        message: 'Loader version (use latest unless you know what you are doing):',
+        choices: loaderVersions,
+        filter: async (input) => input.version
       }
     ];
 
