@@ -26,6 +26,8 @@ let defaultMcVersion = 0;
 
 let fabricAPIVersions = [];
 
+let yarnMappings = [];
+
 function isValidURL(url) {
   try {
     new URL(url);
@@ -100,6 +102,11 @@ module.exports = class extends Generator {
         return buildB - buildA;
       }
       return verA - verB;
+    });
+    //Yarn mapping versions
+    data = await getJSON('https://meta.fabricmc.net/v2/versions/yarn');
+    data.forEach((mapping) => {
+      yarnMappings.push({ name: mapping.version, value: mapping });
     });
   }
 
@@ -272,7 +279,7 @@ module.exports = class extends Generator {
       {
         type: 'list',
         name: 'fabric_api_version',
-        message: 'Fabric API version (check curseforge for compatibilty):',
+        message: `Fabric API version (${chalk.italic('check curseforge for compatibilty')}):`,
         choices: fabricAPIVersions,
         default: async (hash) => {
           let versionIndex = 0;
@@ -295,6 +302,17 @@ module.exports = class extends Generator {
           let version = name.match(/API \d+\.\d+\.\d+/)[0].substring(4);
           return version + "+" + "build." + buildNum;
         }
+      },
+      {
+        type: 'list',
+        name: 'yarn_mappings',
+        message: 'Yarn mappings:',
+        choices: async (hash) => {
+          return yarnMappings.filter((mapping) => {
+            return mapping.value.gameVersion == hash.minecraft_version;
+          });
+        },
+        filter: async (input) => input.version
       }
     ];
 
