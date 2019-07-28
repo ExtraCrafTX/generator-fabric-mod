@@ -410,5 +410,25 @@ module.exports = class extends Generator {
   }
 
   writing() {
+    this.fs.copy(
+      this.templatePath('.gitignore'),
+      this.destinationPath('.gitignore')
+    );
+    this.fs.copy(
+      this.templatePath('gradlew'),
+      this.destinationPath('gradlew')
+    );
+    this.fs.copy(
+      this.templatePath('gradlew.bat'),
+      this.destinationPath('gradlew.bat')
+    );
+    this.fs.copy(
+      this.templatePath('gradle'),
+      this.destinationPath('gradle')
+    );
+    this.fs.copy(
+      this.templatePath('settings.gradle'),
+      this.destinationPath('settings.gradle')
+    );
   }
 };
