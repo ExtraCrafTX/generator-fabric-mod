@@ -371,6 +371,36 @@ module.exports = class extends Generator {
         message: 'Loader version (use latest unless you know what you are doing):',
         choices: loaderVersions,
         filter: async (input) => input.version
+      },
+      {
+        type: 'input',
+        name: 'maven_group',
+        message: 'Maven group:',
+        default: async (hash) => hash.mod_package,
+        validate: async (input, hash) => {
+          if (PACKAGE_REGEX.test(input)) {
+            let idents = input.split(".");
+            for (let i = 0; i < idents.length; i++) {
+              if (KEYWORDS.includes(idents[i])) {
+                return chalk.redBright(idents[i] + " is a reserved keyword");
+              }
+            }
+          } else {
+            return chalk.redBright("Please enter a valid java package name");
+          }
+          return true;
+        }
+      },
+      {
+        type: 'input',
+        name: 'archives_base_name',
+        message: 'Archive base name:',
+        default: async (hash) => hash.mod_id,
+        validate: async (input, hash) => {
+          if (!input.replace(/\s/g, ""))
+            return chalk.redBright("Name may not be blank");
+          return true;
+        },
       }
     ];
 
