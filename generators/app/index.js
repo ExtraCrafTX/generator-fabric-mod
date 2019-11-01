@@ -4,6 +4,7 @@ const chalk = require('chalk');
 const yosay = require('yosay');
 const request = require('request');
 const xml2js = require('xml2js');
+const url = require('url');
 
 const KEYWORDS = ["abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "default", "do", "double", "else", "enum", "extends", "false", "final", "finally", "float", "for", "goto", "if", "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "strictfp", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "void", "volatile", "while", "continue"];
 const PACKAGE_REGEX = /^([A-Za-z$_][A-Za-z0-9$_]*\.)*[A-Za-z$_][A-Za-z0-9$_]*$/;
@@ -34,9 +35,9 @@ let loomVersions = [];
 
 let loaderVersions = [];
 
-function isValidURL(url) {
+function isValidURL(val) {
   try {
-    new URL(url);
+    new url.URL(val);
     return true;
   } catch (_) {
     return false;
