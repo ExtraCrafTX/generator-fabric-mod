@@ -5,11 +5,13 @@ const yosay = require('yosay');
 const request = require('request');
 const xml2js = require('xml2js');
 const url = require('url');
+const semver = require('semver');
 
 const KEYWORDS = ["abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "default", "do", "double", "else", "enum", "extends", "false", "final", "finally", "float", "for", "goto", "if", "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "strictfp", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "void", "volatile", "while", "continue"];
 const PACKAGE_REGEX = /^([A-Za-z$_][A-Za-z0-9$_]*\.)*[A-Za-z$_][A-Za-z0-9$_]*$/;
 const IDENT_REGEX = /^[A-Za-z$_][A-Za-z0-9$_]*$/;
-const LOOM_RECOMMENDED = '0.2.4-SNAPSHOT';
+var LOOM_RECOMMENDED = '0.2.4-SNAPSHOT';
+const LOOM_RECOMMENDED_5 = '0.2.6-SNAPSHOT';
 const LICENSES = [
   { name: 'Apache 2.0', value: 'Apache-2.0' },
   { name: 'MIT', value: 'MIT' },
@@ -201,11 +203,9 @@ module.exports = class extends Generator {
         message: 'Mod version:',
         default: '0.1.0',
         validate: async (input, hash) => {
-          let semVerRegex = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*))*)?(?:\+[\dA-Za-z-]+(?:\.[\dA-Za-z-]+)*)?$/;
-          if (!semVerRegex.test(input)) {
-            return chalk.redBright("Please format your version according to SemVer");
-          }
-          return true;
+          if(semver.valid(input))
+            return true;
+          return chalk.redBright("Please format your version according to SemVer");
         }
       },
       {
@@ -345,21 +345,28 @@ module.exports = class extends Generator {
       },
       {
         type: 'list',
-        name: 'yarn_mappings',
+        name: 'yarn_mapping',
         message: 'Yarn mappings:',
         choices: async (hash) => {
           return yarnMappings.filter((mapping) => {
             return mapping.value.gameVersion == hash.minecraft_version;
           });
-        },
-        filter: async (input) => input.version
+        }
       },
       {
         type: 'list',
         name: 'loom_version',
         message: 'Loom version:',
-        choices: loomVersions,
+        choices: async (hash) => {
+          if(semver.compareBuild(hash.yarn_mapping.gameVersion,"1.14.4")>0 || (semver.compareBuild(hash.yarn_mapping.gameVersion,"1.14.4")==0 && hash.yarn_mapping.build > 14)){
+            hash.gradle5 = true;
+            return loomVersions;
+          }
+          hash.gradle5 = false;
+          return loomVersions.filter((version)=>semver.compare(version,"0.2.6-SNAPSHOT")<0);
+        },
         default: async (hash) => {
+          LOOM_RECOMMENDED = (semver.compareBuild(hash.yarn_mapping.gameVersion,"1.14.4")>0 || (semver.compareBuild(hash.yarn_mapping.gameVersion,"1.14.4")==0 && hash.yarn_mapping.build > 14)) ? LOOM_RECOMMENDED_5 : LOOM_RECOMMENDED;
           for (let i = 0; i < loomVersions.length; i++) {
             if (loomVersions[i] == LOOM_RECOMMENDED)
               return i;
@@ -369,7 +376,7 @@ module.exports = class extends Generator {
       {
         type: 'list',
         name: 'loader_version',
-        message: 'Loader version (use latest unless you know what you are doing):',
+        message: 'Loader version (use latest unless you have a good reason to do otherwise):',
         choices: loaderVersions,
         filter: async (input) => input.version
       },
@@ -411,20 +418,26 @@ module.exports = class extends Generator {
   }
 
   writing() {
+    this.props.yarn_mappings = this.props.yarn_mapping.version;
+    this.props.gradle5 = this.props.gradle5 && semver.compare(this.props.loom_version, "0.2.6-SNAPSHOT") >= 0;
+    let gradleBase = "";
+    if(this.props.gradle5){
+      gradleBase = "gradle5/";
+    }
     this.fs.copy(
       this.templatePath('gitignore'),
       this.destinationPath('.gitignore')
     );
     this.fs.copy(
-      this.templatePath('gradlew'),
+      this.templatePath(gradleBase+'gradlew'),
       this.destinationPath('gradlew')
     );
     this.fs.copy(
-      this.templatePath('gradlew.bat'),
+      this.templatePath(gradleBase+'gradlew.bat'),
       this.destinationPath('gradlew.bat')
     );
     this.fs.copy(
-      this.templatePath('gradle'),
+      this.templatePath(gradleBase+'gradle'),
       this.destinationPath('gradle')
     );
     this.fs.copy(
@@ -444,14 +457,13 @@ module.exports = class extends Generator {
       this.destinationPath('gradle.properties'),
       this.props
     );
-    let loomIndex = 0;
-    for (let i = 0; i < loomVersions.length; i++) {
-      if (this.props.loom_version == loomVersions[i]) {
-        loomIndex = i;
-        break;
-      }
-    }
-    if (loomIndex > 8) {
+    if (gradleBase) {
+      this.fs.copyTpl(
+        this.templatePath('6+build.gradle'),
+        this.destinationPath('build.gradle'),
+        this.props
+      );
+    } else if(semver.compare(this.props.loom_version,"0.2.4-SNAPSHOT")>=0) {
       this.fs.copyTpl(
         this.templatePath('4+build.gradle'),
         this.destinationPath('build.gradle'),
