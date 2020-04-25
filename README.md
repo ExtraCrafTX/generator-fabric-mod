@@ -1,3 +1,5 @@
+**This generator is no longer being maintained! Use [GeneratorFabricMod](https://github.com/ExtraCrafTX/GeneratorFabricMod) instead.**
+
 # generator-fabric-mod [![NPM version][npm-image]][npm-url]
 > Generates skeleton for a Minecraft mod that uses Fabric loader
 
